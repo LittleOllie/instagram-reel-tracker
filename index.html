@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Reel Tracker</title>
+</head>
+<body>
+    <h1>Instagram Reel Tracker</h1>
+    <input type="text" id="username" placeholder="Enter Instagram Username">
+    <button onclick="fetchReels()">Get Reels</button>
+    <div id="reels"></div>
+
+    <script>
+        async function fetchReels() {
+            const username = document.getElementById('username').value;
+            const response = await fetch(`https://www.instagram.com/${username}/?__a=1`);
+            const data = await response.json();
+            displayReels(data);
+        }
+
+        function displayReels(data) {
+            const reelsContainer = document.getElementById('reels');
+            reelsContainer.innerHTML = '';
+
+            const reels = data.graphql.user.edge_owner_to_timeline_media.edges
+                .filter(edge => edge.node.is_video)
+                .sort((a, b) => b.node.video_view_count - a.node.video_view_count);
+
+            reels.forEach(reel => {
+                const reelElement = document.createElement('div');
+                reelElement.innerHTML = `
+                    <h3>${reel.node.edge_media_to_caption.edges[0]?.node.text || 'No caption'}</h3>
+                    <p>Views: ${reel.node.video_view_count}</p>
+                    <video width="320" height="240" controls>
+                        <source src="${reel.node.video_url}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                `;
+                reelsContainer.appendChild(reelElement);
+            });
+        }
+    </script>
+</body>
+</html>
